@@ -1,0 +1,6 @@
+test:
+  image: python:3.8
+  script:
+  - pip install --upgrade pip
+  - pip install google-api-python-client google-auth-httplib2 google-auth-oauthlib
+  - python CalendarTest.py
