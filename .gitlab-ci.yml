@@ -1,6 +1,19 @@
+cache:
+  paths:
+    - ~/.cache/pip/
+
 test:
   image: python:3.8
+  before_script:
+    - pip install --upgrade pip
+    - pip install google-api-python-client google-auth-httplib2 google-auth-oauthlib
   script:
-  - pip install --upgrade pip
-  - pip install google-api-python-client google-auth-httplib2 google-auth-oauthlib
-  - python CalendarTest.py
+     python CalendarTest.py
+
+coverage:
+  before_script:
+    - pip install coverage
+  script:
+  - coverage run -m CalendarTest
+  - coverage report
+  coverage: '/^TOTAL.*\s+(\d+\%)$/'

@@ -1,9 +1,13 @@
+# ======== Set up access to API ========================================
 # Make sure you are logged into your Monash student account.
 # Go to: https://developers.google.com/calendar/quickstart/python
 # Click on "Enable the Google Calendar API"
 # Configure your OAuth client - select "Desktop app", then proceed
 # Click on "Download Client Configuration" to obtain a credential.json file
 # Do not share your credential.json file with anybody else, and do not commit it to your A2 git repository.
+
+
+# ========= Provide access to your google account ==========================
 # When app is run for the first time, you will need to sign in using your Monash student account.
 # Allow the "View your calendars" permission request.
 
@@ -26,7 +30,7 @@ from google.auth.transport.requests import Request
 SCOPES = ['https://www.googleapis.com/auth/calendar.readonly']
 
 
-def get_calendar_api():
+def get_calendar_api():   # pragma: no cover
     """
     Get an object which allows you to consume the Google Calendar API.
     You do not need to worry about what this function exactly does, nor create test cases for it.
@@ -66,7 +70,7 @@ def get_upcoming_events(api, starting_time, number_of_events):
                                       maxResults=number_of_events, singleEvents=True,
                                       orderBy='startTime').execute()
     return events_result.get('items', [])
-    
+
     # Add your methods here.
 
 
@@ -85,3 +89,14 @@ def main():
 
 if __name__ == "__main__":  # Prevents the main() function from being called by the test suite runner
     main()
+
+
+# Requirements --------------------------------
+#   Events, reminders, notifications 5 years past, 2 years future least; all events
+#   Navigate through days, months, years, view details of events (events, reminders, notifications)
+#   Send invitations to attendees with student.monash.edu address
+#          Do not support other emails
+#   Search events, reminders, notifications using different keywords
+#   Delete events, reminders, notifications
+
+

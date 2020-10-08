@@ -1,2 +1,6 @@
 credentials.json
 .idea
+.pytest_cache
+.coverage
+token.pickle
+__pycache__/

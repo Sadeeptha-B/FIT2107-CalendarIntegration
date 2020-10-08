@@ -1,0 +1,16 @@
+#.coveragerc to control coverage.py
+[run]
+branch = True
+
+[report]
+exclude_lines =
+      # Enable default exclusion
+      pragma: no cover
+
+      # Ignore exception coverage
+      raise ValueError
+
+
+
+
+

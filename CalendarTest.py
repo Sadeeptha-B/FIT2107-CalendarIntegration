@@ -25,6 +25,7 @@ class CalendarTest(unittest.TestCase):
 def main():
     # Create the test suite from the cases above.
     suite = unittest.TestLoader().loadTestsFromTestCase(CalendarTest)
+
     # This will run the test suite.
     unittest.TextTestRunner(verbosity=2).run(suite)
 
