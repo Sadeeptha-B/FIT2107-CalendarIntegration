@@ -1,17 +1,21 @@
 import unittest
 from unittest.mock import Mock
-import Calendar
-# Add other imports here if needed
+from Calendar import Calendar
 
 
-class CalendarTest(unittest.TestCase):
+class CalendarTestUpcoming(unittest.TestCase):
+    """
+    Test suite to test for upcoming events
+    """
+
     # This test tests number of upcoming events.
     def test_get_upcoming_events_number(self):
         num_events = 2
         time = "2020-08-03T00:00:00.000000Z"
 
         mock_api = Mock()
-        events = Calendar.get_upcoming_events(mock_api, time, num_events)
+        test_calendar = Calendar(mock_api)
+        events = test_calendar.get_upcoming_events(time, num_events)
 
         self.assertEqual(
             mock_api.events.return_value.list.return_value.execute.return_value.get.call_count, 1)
@@ -24,7 +28,7 @@ class CalendarTest(unittest.TestCase):
 
 def main():
     # Create the test suite from the cases above.
-    suite = unittest.TestLoader().loadTestsFromTestCase(CalendarTest)
+    suite = unittest.TestLoader().loadTestsFromTestCase(CalendarTestUpcoming)
 
     # This will run the test suite.
     unittest.TextTestRunner(verbosity=2).run(suite)
