@@ -42,7 +42,7 @@ def get_calendar_api():   # pragma: no cover
 class Calendar:
     DEFAULT_CALENDAR_ID = "primary"
 
-    def __init__(self, api=get_calendar_api(), calendar_id: str = DEFAULT_CALENDAR_ID):
+    def __init__(self, api, calendar_id: str = DEFAULT_CALENDAR_ID):
         self.api = api
         self.calendar_id = calendar_id
 
@@ -88,7 +88,7 @@ def get_date_iso(date_str: str):
 
 
 def main():
-    primary_calendar = Calendar()
+    primary_calendar = Calendar(get_calendar_api())
 
     time_now = datetime.datetime.utcnow().isoformat() + 'Z'  # 'Z' indicates UTC time
     # events = primary_calendar.get_upcoming_events(time_now, 10)
