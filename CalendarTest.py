@@ -1,6 +1,6 @@
 import unittest
 from unittest.mock import Mock
-from Calendar import Calendar
+import Calendar
 
 
 class CalendarTestUpcoming(unittest.TestCase):
@@ -14,7 +14,7 @@ class CalendarTestUpcoming(unittest.TestCase):
         time = "2020-08-03T00:00:00.000000Z"
 
         mock_api = Mock()
-        test_calendar = Calendar(mock_api)
+        test_calendar = Calendar.Calendar(mock_api)
         events = test_calendar.get_upcoming_events(time, num_events)
 
         self.assertEqual(
