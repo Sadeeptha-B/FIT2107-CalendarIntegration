@@ -1,6 +1,6 @@
-#FIT2107 - Assignment 2 
+# FIT2107 - Assignment 2 
 
-####Implementing a calendar with Google Calendar API
+#### Implementing a calendar with Google Calendar API
 
 Team    - PepeD  
 Members -  Sadeeptha Bandara, Kaveesha Nissanka  
