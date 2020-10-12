@@ -1,25 +1,6 @@
-# ======== Set up access to API ========================================
-# Make sure you are logged into your Monash student account.
-# Go to: https://developers.google.com/calendar/quickstart/python
-# Click on "Enable the Google Calendar API"
-# Configure your OAuth client - select "Desktop app", then proceed
-# Click on "Download Client Configuration" to obtain a credential.json file
-# Do not share your credential.json file with anybody else, and do not commit it to your A2 git repository.
-
-
-# ========= Provide access to your google account ==========================
-# When app is run for the first time, you will need to sign in using your Monash student account.
-# Allow the "View your calendars" permission request.
-
-
-# Students must have their own api key
-# No test cases needed for authentication, but authentication may required for running the app very first time.
-# http://googleapis.github.io/google-api-python-client/docs/dyn/calendar_v3.html
-
-
 # Code adapted from https://developers.google.com/calendar/quickstart/python
-from __future__ import print_function
 import datetime
+from dateutil.relativedelta import relativedelta
 import pickle
 import os.path
 from googleapiclient.discovery import build
@@ -30,7 +11,7 @@ from google.auth.transport.requests import Request
 SCOPES = ['https://www.googleapis.com/auth/calendar.readonly']
 
 
-def get_calendar_api():   # pragma: no cover
+def get_calendar_api():  # pragma: no cover
     """
     Get an object which allows you to consume the Google Calendar API.
     You do not need to worry about what this function exactly does, nor create test cases for it.
@@ -58,45 +39,100 @@ def get_calendar_api():   # pragma: no cover
     return build('calendar', 'v3', credentials=creds)
 
 
-def get_upcoming_events(api, starting_time, number_of_events):
-    """
-    Shows basic usage of the Google Calendar API.
-    Prints the start and name of the next n events on the user's calendar.
-    """
-    if (number_of_events <= 0):
-        raise ValueError("Number of events must be at least 1.")
+class Calendar:
+    DEFAULT_CALENDAR_ID = "primary"
 
-    events_result = api.events().list(calendarId='primary', timeMin=starting_time,
-                                      maxResults=number_of_events, singleEvents=True,
-                                      orderBy='startTime').execute()
-    return events_result.get('items', [])
+    def __init__(self, api, calendar_id: str = DEFAULT_CALENDAR_ID):
+        self.api = api
+        self.calendar_id = calendar_id
 
-    # Add your methods here.
+    def get_upcoming_events(self, starting_time: str, number_of_events: int):
+        """
+        Shows basic usage of the Google Calendar API.
+        Prints the start and name of the next n events on the user's calendar.
+        """
+        if number_of_events <= 0:
+            raise ValueError("Number of events must be at least 1.")
+
+        events_response = self.api.events().list(calendarId=self.calendar_id, timeMin=starting_time,
+                                                 maxResults=number_of_events, singleEvents=True,
+                                                 orderBy='startTime').execute()
+        return events_response.get('items', [])
+
+    def __get_events_from_year(self, years):
+        time_now = datetime.datetime.utcnow()
+        change_date = time_now + relativedelta(years=years)
+
+        time_min = get_date_iso(min(time_now, change_date))
+        time_max = get_date_iso(max(time_now, change_date))
+
+        events_response = self.api.events().list(calendarId=self.calendar_id, singleEvents=True,
+                                                 orderBy='startTime', timeMin=time_min,
+                                                 timeMax=time_max).execute()
+
+        return events_response.get('items', [])
+
+    def get_past_events(self, years_past: int = 5):
+        year_input = - years_past
+        return self.__get_events_from_year(year_input)
+
+    def get_future_events(self, years_future: int = 2):
+        return self.__get_events_from_year(years_future)
+
+    def search_events(self, keyword: str):
+        """"
+        Allows the user to search for events
+        """
+        events = self.get_past_events()
+        events += self.get_future_events()
+        search_Yield = False
+        for event in events:
+            if keyword.lower() in event['summary'].lower():
+                search_Yield = True
+                print(event['start'].get('dateTime', event['start'].get('date')) + ' ' + event['summary'])
+        if not search_Yield:
+            print("Nothing showed up in your search")
+
+
+def get_date_iso(date_str: str):
+    """
+    :param: date_str should be in utc format
+    """
+    return date_str.isoformat() + 'Z'
 
 
 def main():
-    api = get_calendar_api()
-    time_now = datetime.datetime.utcnow().isoformat() + 'Z'  # 'Z' indicates UTC time
+    primary_calendar = Calendar(get_calendar_api())
 
-    events = get_upcoming_events(api, time_now, 10)
+    time_now = datetime.datetime.utcnow().isoformat() + 'Z'  # 'Z' indicates UTC time
+    # events = primary_calendar.get_upcoming_events(time_now, 10)
+    # events = primary_calendar.get_past_events()
+    events = primary_calendar.get_future_events()
+    # x = input("Enter Keyword for search: ")
+
+    # while len(x) < 2:
+    #    print("Keyword should be at least 2 characters long")
+    #    x = input("Enter Keyword: ")
+
+    # primary_calendar.search_events(x)
 
     if not events:
         print('No upcoming events found.')
+
+    i = 0
     for event in events:
+        i += 1
         start = event['start'].get('dateTime', event['start'].get('date'))
-        print(start, event['summary'])
+        print(i, start, event['summary'])
 
 
 if __name__ == "__main__":  # Prevents the main() function from being called by the test suite runner
     main()
-
 
 # Requirements --------------------------------
 #   Events, reminders, notifications 5 years past, 2 years future least; all events
 #   Navigate through days, months, years, view details of events (events, reminders, notifications)
 #   Send invitations to attendees with student.monash.edu address
 #          Do not support other emails
-#   Search events, reminders, notifications using different keywords
-#   Delete events, reminders, notifications
-
-
+#   Search events and reminders using different keywords
+#   Delete events and reminders
