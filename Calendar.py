@@ -11,7 +11,7 @@ from google.auth.transport.requests import Request
 SCOPES = ['https://www.googleapis.com/auth/calendar.readonly']
 
 
-def get_calendar_api():   # pragma: no cover
+def get_calendar_api():  # pragma: no cover
     """
     Get an object which allows you to consume the Google Calendar API.
     You do not need to worry about what this function exactly does, nor create test cases for it.
@@ -79,6 +79,20 @@ class Calendar:
     def get_future_events(self, years_future: int = 2):
         return self.__get_events_from_year(years_future)
 
+    def search_events(self, keyword: str):
+        """"
+        Allows the user to search for events
+        """
+        events = self.get_past_events()
+        events += self.get_future_events()
+        search_Yield = False
+        for event in events:
+            if keyword.lower() in event['summary'].lower():
+                search_Yield = True
+                print(event['start'].get('dateTime', event['start'].get('date')) + ' ' + event['summary'])
+        if not search_Yield:
+            print("Nothing showed up in your search")
+
 
 def get_date_iso(date_str: str):
     """
@@ -94,7 +108,13 @@ def main():
     # events = primary_calendar.get_upcoming_events(time_now, 10)
     # events = primary_calendar.get_past_events()
     events = primary_calendar.get_future_events()
+    # x = input("Enter Keyword for search: ")
 
+    # while len(x) < 2:
+    #    print("Keyword should be at least 2 characters long")
+    #    x = input("Enter Keyword: ")
+
+    # primary_calendar.search_events(x)
 
     if not events:
         print('No upcoming events found.')
@@ -109,13 +129,10 @@ def main():
 if __name__ == "__main__":  # Prevents the main() function from being called by the test suite runner
     main()
 
-
 # Requirements --------------------------------
 #   Events, reminders, notifications 5 years past, 2 years future least; all events
 #   Navigate through days, months, years, view details of events (events, reminders, notifications)
 #   Send invitations to attendees with student.monash.edu address
 #          Do not support other emails
-#   Search events, reminders, notifications using different keywords
-#   Delete events, reminders, notifications
-
-
+#   Search events and reminders using different keywords
+#   Delete events and reminders
