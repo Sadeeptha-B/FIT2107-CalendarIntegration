@@ -1,8 +1,17 @@
-# Code adapted from https://developers.google.com/calendar/quickstart/python
+"""
+Calendar application making use of Google Calendar API
+
+Initial base code adapted from
+    # https://developers.google.com/calendar/quickstart/python
+"""
+
+__author__ = "Sadeeptha Bandara, Kaveesha Nissanka"
+
+
 import datetime
-from dateutil.relativedelta import relativedelta
 import pickle
 import os.path
+from dateutil.relativedelta import relativedelta
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
@@ -41,6 +50,8 @@ def get_calendar_api():  # pragma: no cover
 
 class Calendar:
     DEFAULT_CALENDAR_ID = "primary"
+    DEFAULT_FUTURE_YEAR_RANGE = 2
+    DEFAULT_PAST_YEAR_RANGE = 5
 
     def __init__(self, api, calendar_id: str = DEFAULT_CALENDAR_ID):
         self.api = api
@@ -48,7 +59,6 @@ class Calendar:
 
     def get_upcoming_events(self, starting_time: str, number_of_events: int):
         """
-        Shows basic usage of the Google Calendar API.
         Prints the start and name of the next n events on the user's calendar.
         """
         if number_of_events <= 0:
@@ -59,7 +69,11 @@ class Calendar:
                                                  orderBy='startTime').execute()
         return events_response.get('items', [])
 
-    def __get_events_from_year(self, years):
+    def _get_events_from_year(self, years):
+        """
+        Get events within specified year limit
+            positive for years to the future, negative for years in the past
+        """
         time_now = datetime.datetime.utcnow()
         change_date = time_now + relativedelta(years=years)
 
@@ -72,12 +86,23 @@ class Calendar:
 
         return events_response.get('items', [])
 
-    def get_past_events(self, years_past: int = 5):
-        year_input = - years_past
-        return self.__get_events_from_year(year_input)
+    def get_past_events(self, years_past: int = DEFAULT_PAST_YEAR_RANGE):
+        """
+         Get events within specified year limit in the past
+        """
+        if years_past < 0:
+            raise ValueError("Year Input cannot be negative")
 
-    def get_future_events(self, years_future: int = 2):
-        return self.__get_events_from_year(years_future)
+        year_input = - years_past
+        return self._get_events_from_year(year_input)
+
+    def get_future_events(self, years_future: int = DEFAULT_FUTURE_YEAR_RANGE):
+        """
+         Get events within specified year limit in the future
+        """
+        if years_future < 0:
+            raise ValueError()
+        return self._get_events_from_year(years_future)
 
     def search_events(self, keyword: str):
         """"
@@ -125,7 +150,7 @@ def main():
 
     # choice = input('Your choice as an integer: ')
 
-    # events = primary_calendar.get_upcoming_events(time_now, 10)
+    events = primary_calendar.get_upcoming_events(time_now, 10)
     # events = primary_calendar.get_past_events()
     # events = primary_calendar.get_future_events()
     # x = input("Enter Keyword for search: ")
@@ -134,14 +159,24 @@ def main():
     #    print("Keyword should be at least 2 characters long")
     #    x = input("Enter Keyword: ")
     # primary_calendar.search_events(x)
+    if not events:
+        print('No upcoming events found.')
+
+    i = 0
+    for event in events:
+        i += 1
+        start = event['start'].get('dateTime', event['start'].get('date'))
+        print(i, start, event['summary'])
+
 
 if __name__ == "__main__":  # Prevents the main() function from being called by the test suite runner
     main()
 
 # Requirements --------------------------------
-#   Events, reminders, notifications 5 years past, 2 years future least; all events
-#   Navigate through days, months, years, view details of events (events, reminders, notifications)
+#   Events, reminders 5 years past, 2 years future least; all events
+#   Navigate through days, months, years, view details of events (events, reminders)
 #   Send invitations to attendees with student.monash.edu address
 #          Do not support other emails
 #   Search events and reminders using different keywords
 #   Delete events and reminders
+
