@@ -114,7 +114,12 @@ class Calendar:
         for event in events:
             if keyword.lower() in event['summary'].lower():
                 search_Yield = True
-                print(event['start'].get('dateTime', event['start'].get('date')) + ' ' + event['summary'])
+                print('Event:' + event['summary'] + ' at ' + event['start'].get('dateTime', event['start'].get('date')))
+                if event['reminders']['useDefault']:
+                    print('Reminder in 10 minutes before event')
+                else:
+                    for reminder in event['reminders']['overrides']:
+                        print('Reminder in ' + str(reminder['minutes']) + ' minutes before event as ' + reminder['method'])
         if not search_Yield:
             print("Nothing showed up in your search")
 
@@ -128,10 +133,22 @@ def get_date_iso(date_str: str):
 
 def main():
     primary_calendar = Calendar(get_calendar_api())
+
+    # print('Please enter your choice')
+    # print('1. View past events.')
+    # print('2. View future events')
+    # print('3. Feature 3')
+    # print('4. Search for an event and reminders')
+    # print('5. Delete an event and reminders')
+    # print('6. Exit')
+
     time_now = datetime.datetime.utcnow().isoformat() + 'Z'  # 'Z' indicates UTC time
+
+    # choice = input('Your choice as an integer: ')
+
     events = primary_calendar.get_upcoming_events(time_now, 10)
     # events = primary_calendar.get_past_events()
-    events = primary_calendar.get_future_events()
+    # events = primary_calendar.get_future_events()
     # x = input("Enter Keyword for search: ")
 
     # while len(x) < 2:
@@ -139,7 +156,6 @@ def main():
     #    x = input("Enter Keyword: ")
 
     # primary_calendar.search_events(x)
-
 
     if not events:
         print('No upcoming events found.')
@@ -149,6 +165,7 @@ def main():
         i += 1
         start = event['start'].get('dateTime', event['start'].get('date'))
         print(i, start, event['summary'])
+
 
 
 if __name__ == "__main__":  # Prevents the main() function from being called by the test suite runner
