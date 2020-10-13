@@ -8,7 +8,7 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 
 # If modifying these scopes, delete the file token.pickle.
-SCOPES = ['https://www.googleapis.com/auth/calendar.readonly']
+SCOPES = ['https://www.googleapis.com/auth/calendar.readonly', 'https://www.googleapis.com/auth/calendar']
 
 
 def get_calendar_api():  # pragma: no cover
@@ -98,6 +98,10 @@ class Calendar:
         if not search_Yield:
             print("Nothing showed up in your search")
 
+    def delete_events(self, eventId):
+
+        self.api.events().delete(calendarId=self.calendar_id, eventId=eventId).execute()
+
 
 def get_date_iso(date_str: str):
     """
@@ -129,9 +133,7 @@ def main():
     # while len(x) < 2:
     #    print("Keyword should be at least 2 characters long")
     #    x = input("Enter Keyword: ")
-
     # primary_calendar.search_events(x)
-
 
 if __name__ == "__main__":  # Prevents the main() function from being called by the test suite runner
     main()
