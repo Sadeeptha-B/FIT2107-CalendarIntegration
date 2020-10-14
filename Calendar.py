@@ -104,6 +104,27 @@ class Calendar:
             raise ValueError()
         return self._get_events_from_year(years_future)
 
+    def navigate_to_events(self, time):
+        events = self.get_past_events()
+        events += self.get_future_events()
+        resultList = []
+        for event in events:
+            eventTime = event['start']['dateTime'].split('T', 1)
+            if time in eventTime[0]:
+                result = 'Event:' + event['summary'] + ' at ' + event['start'].get('dateTime',
+                                                                                   event['start'].get('date'))
+                if event['reminders']['useDefault']:
+                    result += 'Reminder in 10 minutes before event'
+                else:
+                    for reminder in event['reminders']['overrides']:
+                        result + 'Reminder in ' + str(reminder['minutes']) + ' minutes before event as ' + reminder[
+                            'method']
+                resultList.append(result)
+        if len(resultList) < 1:
+            resultList = "Nothing showed up in your search"
+        return resultList
+        pass
+
     def search_events(self, keyword: str):
         """"
         Allows the user to search for events
