@@ -86,6 +86,13 @@ class Calendar:
 
         return events_response.get('items', [])
 
+    def get_events_with_reminders(self, events):
+        """
+        """
+        for event in events:
+            pass
+
+
     def get_past_events(self, years_past: int = DEFAULT_PAST_YEAR_RANGE):
         """
          Get events within specified year limit in the past
@@ -101,8 +108,9 @@ class Calendar:
          Get events within specified year limit in the future
         """
         if years_future < 0:
-            raise ValueError()
+            raise ValueError("Year Input cannot be negative")
         return self._get_events_from_year(years_future)
+
 
     def search_events(self, keyword: str):
         """"
@@ -116,7 +124,7 @@ class Calendar:
                 search_Yield = True
                 print('Event:' + event['summary'] + ' at ' + event['start'].get('dateTime', event['start'].get('date')))
                 if event['reminders']['useDefault']:
-                    print('Reminder in 10 minutes before event')
+                    print('Reminder in ' + str(events[defaultReminders][minutes]) + 'minutes before event')
                 else:
                     for reminder in event['reminders']['overrides']:
                         print('Reminder in ' + str(reminder['minutes']) + ' minutes before event as ' + reminder['method'])
@@ -124,7 +132,6 @@ class Calendar:
             print("Nothing showed up in your search")
 
     def delete_events(self, eventId):
-
         self.api.events().delete(calendarId=self.calendar_id, eventId=eventId).execute()
 
 
@@ -133,6 +140,14 @@ def get_date_iso(date_str: str):
     :param: date_str should be in utc format
     """
     return date_str.isoformat() + 'Z'
+
+
+class Runner:
+    def __init__(self):
+        pass
+
+    def classMethod()
+
 
 
 def main():
