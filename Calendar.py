@@ -110,21 +110,22 @@ class Calendar:
         """
         events = self.get_past_events()
         events += self.get_future_events()
-        search_Yield = False
+        resultList = []
         for event in events:
             if keyword.lower() in event['summary'].lower():
-                search_Yield = True
-                print('Event:' + event['summary'] + ' at ' + event['start'].get('dateTime', event['start'].get('date')))
+                result = 'Event:' + event['summary'] + ' at ' + event['start'].get('dateTime', event['start'].get('date'))
                 if event['reminders']['useDefault']:
-                    print('Reminder in 10 minutes before event')
+                    result += 'Reminder in 10 minutes before event'
                 else:
                     for reminder in event['reminders']['overrides']:
-                        print('Reminder in ' + str(reminder['minutes']) + ' minutes before event as ' + reminder['method'])
-        if not search_Yield:
-            print("Nothing showed up in your search")
+                        result + 'Reminder in ' + str(reminder['minutes']) + ' minutes before event as ' + reminder['method']
+                resultList.append(result)
+        if len(resultList) < 1:
+            resultList.append("Nothing showed up in your search")
+        return resultList
 
-    def delete_events(self, eventId):
-
+    def delete_events(self, event):
+        eventId = event['id']
         self.api.events().delete(calendarId=self.calendar_id, eventId=eventId).execute()
 
 
@@ -153,12 +154,12 @@ def main():
     events = primary_calendar.get_upcoming_events(time_now, 10)
     # events = primary_calendar.get_past_events()
     # events = primary_calendar.get_future_events()
-    # x = input("Enter Keyword for search: ")
+    x = input("Enter date for search: ")
 
-    # while len(x) < 2:
-    #    print("Keyword should be at least 2 characters long")
-    #    x = input("Enter Keyword: ")
-    # primary_calendar.search_events(x)
+    while len(x) < 2:
+        print("Keyword should be at least 2 characters long")
+        x = input("Enter Keyword: ")
+    print(primary_calendar.navigate_to_events(x))
     if not events:
         print('No upcoming events found.')
 
