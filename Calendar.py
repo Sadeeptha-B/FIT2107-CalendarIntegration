@@ -20,6 +20,7 @@ from dateutil.relativedelta import relativedelta
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
+from typing import List
 
 # If modifying these scopes, delete the file token.pickle.
 SCOPES = ['https://www.googleapis.com/auth/calendar.readonly', 'https://www.googleapis.com/auth/calendar']
@@ -58,7 +59,6 @@ class Calendar:
     DEFAULT_FUTURE_YEAR_RANGE = 2
     DEFAULT_PAST_YEAR_RANGE = 5
 
-
     def __init__(self, api, calendar_id: str = DEFAULT_CALENDAR_ID):
         self.api = api
         self.calendar_id = calendar_id
@@ -71,7 +71,7 @@ class Calendar:
         Get the global reminder defaults for calendar 
         """
         calendar_resource = self.api.calendarList().get(calendarId=self.calendar_id).execute()
-        return calendar_resource['defaultReminders'][0]       #REVIEW: Retrieve reminder 'method' as well?
+        return calendar_resource['defaultReminders'][0]      
 
 
     def get_upcoming_events(self, starting_time: str, number_of_events: int):
@@ -85,11 +85,11 @@ class Calendar:
                                                  maxResults=number_of_events, singleEvents=True,
                                                  orderBy='startTime').execute()
 
-        self.event_reminder_defaults = events_response['defaultReminders'][0]    #REVIEW: Retrieve reminder 'method' as well?
+        self.event_reminder_defaults = events_response['defaultReminders'][0]    
         return events_response.get('items', [])
 
 
-    def _get_events_from_year(self, years):
+    def _get_events_in_year_range(self, years):
         """
         Get events within specified year limit
             positive for years to the future, negative for years in the past
@@ -108,7 +108,7 @@ class Calendar:
         return events_response.get('items', [])
 
 
-    def get_past_events(self, years_past: int = DEFAULT_PAST_YEAR_RANGE):
+    def get_past_events(self, years_past: int=DEFAULT_PAST_YEAR_RANGE):
         """
          Get events within specified year limit in the past
         """
@@ -116,46 +116,28 @@ class Calendar:
             raise ValueError("Year Input cannot be negative")
 
         year_input = - years_past
-        return self._get_events_from_year(year_input)
+        return self._get_events_in_year_range(year_input)
 
 
-    def get_future_events(self, years_future: int = DEFAULT_FUTURE_YEAR_RANGE):
+    def get_future_events(self, years_future: int=DEFAULT_FUTURE_YEAR_RANGE):
         """
          Get events within specified year limit in the future
         """
         if years_future < 0:
             raise ValueError("Year Input cannot be negative")
-        return self._get_events_from_year(years_future)
+        return self._get_events_in_year_range(years_future)
 
 
-    def get_events_with_reminders(self, events):
-        """
-        Get reminders under a given event, provided the list of events
-        """
-        for event in events:
-            if event['reminders']['useDefault']:
-                event['reminders'] = [self.reminder_defaults]
-            else:
-                try:
-                    event['reminders']['overrides'] 
-                except KeyError:
-                    event['reminders'] = []
-                else:
-                    event['reminders'] = event['reminders']['overrides']
-
-        return events
-
-
-    def get_event_reminder(self, event):
-       if event['reminders']['useDefault']:
+    def get_event_with_reminders(self, event):
+        if event['reminders']['useDefault']:
             event['reminders'] = [self.reminder_defaults]
+        else:
             try:
                 event['reminders']['overrides'] 
             except KeyError:
                 event['reminders'] = []
             else:
                 event['reminders'] = event['reminders']['overrides']
-       return event
 
 
     def navigate_to_events(self, time):
@@ -205,6 +187,12 @@ class Calendar:
         eventId = event['id']
         self.api.events().delete(calendarId=self.calendar_id, eventId=eventId).execute()
 
+    def get_calendar_future_range():
+        return DEFAULT_FUTURE_YEAR_RANGE
+
+    def get_calendar_past_range():
+        return DEFAULT_PAST_YEAR_RANGE
+
 
 def get_date_iso(date_str: str):
     """
@@ -213,21 +201,73 @@ def get_date_iso(date_str: str):
     return date_str.isoformat() + 'Z'
 
 
-def main():
-    primary_calendar = Calendar(get_calendar_api())
-    print(primary_calendar.get_events_with_reminders(primary_calendar.get_future_events()))
+class Runner:
+    DEFAULT_FUTURE_YEAR_RANGE = 2
+    DEFAULT_PAST_YEAR_RANGE = 5
 
-    # print('Please enter your choice')
-    # print('1. View past events.')
-    # print('2. View future events')
-    # print('3. Feature 3')
-    # print('4. Search for an event and reminders')
-    # print('5. Delete an event and reminders')
-    # print('6. Exit')
+    def __init__(self):
+        self.calendar = Calendar(get_calendar_api())
+
+    def __call__(self):
+        print('Please enter your choice')
+        print('1. View past events.')
+        print('2. View future events')
+        print('3. Feature 3')
+        print('4. Search for an event and reminders')
+        print('5. Delete an event and reminders')
+        print('6. Exit')
+
+        choice = input('Your choice as an integer: ')
+
+
+    def view_events_and_reminders_future(self, years=self.calendar.get_calendar_future_range()):
+        events = self.calendar.get_future_events(years)
+        self.view_events_and_reminders(events)
+    
+
+    def view_events_and_reminders_past(self, years= self.calendar.get_calendar_past_range()):
+        events = self.calendar.get_past_events(years)
+        self.view_events_and_reminders(events)        
+
+
+    def view_events_and_reminders(self, events):
+        for event in events:
+            self.calendar.get_event_with_reminders(event)
+            print( 'Event:' + event['summary'] + ' at ' + event['start'].get('dateTime', event['start'].get('date')))
+            reminders = event['reminders']
+            for reminder in reminders:
+                print("   Reminder: In " + str(reminder['minutes']) + " minutes before event and is displayed as a " + reminder["method"])       
+            print()
+
+    
+    
+
+
+
+
+
+        
+
+        
+
+
+
+
+
+
+
+
+def main():
+    runner = Runner()
+    runner.view_events_and_reminders_future()
+    # primary_calendar = Calendar(get_calendar_api())
+    # print(primary_calendar.get_events_with_reminders(primary_calendar.get_future_events()))
+
+   
 
     # time_now = datetime.datetime.utcnow().isoformat() + 'Z'  # 'Z' indicates UTC time
 
-    # choice = input('Your choice as an integer: ')
+   
 
     # events = primary_calendar.get_upcoming_events(time_now, 10)
     # # events = primary_calendar.get_past_events()
