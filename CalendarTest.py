@@ -9,8 +9,11 @@ class CalendarTestGetEvents(unittest.TestCase):
     """
 
     def setUp(self) -> None:
-        self.mock_api = Mock()
+        self.mock_api = MagicMock()
         self.Calendar = Calendar(self.mock_api)
+
+    def test_get_reminder_defaults(self):
+        pass
 
     def test_get_upcoming_events_number(self):
         """
@@ -39,6 +42,7 @@ class CalendarTestGetEvents(unittest.TestCase):
         # Call count
         events = self.Calendar.get_upcoming_events(time, num_events)
         access_event_list = self.mock_api.events().list().execute.return_value
+        print(access_event_list)
         self.assertEqual(access_event_list.get.call_count, 1)
 
         # num_events properly passed
@@ -84,10 +88,10 @@ class CalendarTestSearchEvents(unittest.TestCase):
                                                                    'start': {'dateTime': '2020-10-22T18:30:00+05:30'},
                                                                    'reminders': {'useDefault': True}}])
 
-        searchResult = self.Calendar.search_events('past')
+        search_result = self.Calendar.search_events('past')
         self.assertEqual(
             ['Event:Past Event Summary at 2020-10-13T11:30:00+05:30\nReminder in 10 minutes before event'],
-            searchResult)
+            search_result)
 
     def test_search_events_with_user_reminders(self):
         self.Calendar.get_past_events = MagicMock(return_value=[{'id': '1olba0rgbijmfv72m1126kpftf',
@@ -124,12 +128,14 @@ class CalendarTestSearchEvents(unittest.TestCase):
             searchResult)
 
 
+
+
 def main():
     # Create the test suite from the cases above.
-    searchSuite = unittest.TestLoader().loadTestsFromTestCase(CalendarTestSearchEvents)
+    search_suite = unittest.TestLoader().loadTestsFromTestCase(CalendarTestSearchEvents)
 
     # This will run the test suite.
-    unittest.TextTestRunner(verbosity=2).run(searchSuite)
+    unittest.TextTestRunner(verbosity=2).run(search_suite)
 
 
 main()
