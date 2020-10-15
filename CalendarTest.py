@@ -73,6 +73,38 @@ class CalendarTestGetEvents(unittest.TestCase):
         self.assertNotEqual(events.items, [])
 
 
+class CalendarTestNavigateEvents(unittest.TestCase):
+    def setUp(self) -> None:
+        self.mock_api = MagicMock()
+        self.Calendar = Calendar(self.mock_api)
+
+    def test_navigate_events_with_reminders(self):
+        self.Calendar.get_past_events = MagicMock(return_value=[{'id': '1olba0rgbijmfv72m1126kpftf',
+                                                                 'summary': 'Past Event Summary',
+                                                                 'start': {'date': '2020-10-13'},
+                                                                 'reminders': {'useDefault': True}},
+                                                                {'id': '2insr0pnrijmfv72m1126kpftf',
+                                                                 'summary': 'Past Event 2 Summary',
+                                                                 'start': {'date': '2020-11-13'},
+                                                                 'reminders': {'useDefault': True}}])
+        self.Calendar.get_future_events = MagicMock(return_value=[{'id': '4odta0egtjvboj82p4326esnvw',
+                                                                   'summary': 'Future Event Summary',
+                                                                   'start': {'dateTime': '2020-10-22T18:30:00+05:30'},
+                                                                   'reminders': {'useDefault': False, 'overrides': [
+                                                                       {'method': 'email', 'minutes': 20},
+                                                                       {'method': 'popup', 'minutes': 10}]}}])
+
+        searchResult = self.Calendar.navigate_to_events('2020-10')
+        self.assertEqual(
+            ['Event:Past Event Summary at 2020-10-13\nReminder in 10 minutes before event',
+             'Event:Future Event Summary at 2020-10-22T18:30:00+05:30\nReminder in 20 minutes before event as email\nReminder in 10 minutes before event as popup'],
+            searchResult)
+
+    def test_navigate_to_non_existent_events_(self):
+        searchResult = self.Calendar.navigate_to_events('2020-10')
+        self.assertEqual("Nothing showed up at this time: 2020-10", searchResult)
+
+
 class CalendarTestSearchEvents(unittest.TestCase):
     def setUp(self) -> None:
         self.mock_api = MagicMock()
@@ -132,10 +164,13 @@ class CalendarTestSearchEvents(unittest.TestCase):
 
 def main():
     # Create the test suite from the cases above.
-    search_suite = unittest.TestLoader().loadTestsFromTestCase(CalendarTestSearchEvents)
+
+    navigateSuite = unittest.TestLoader().loadTestsFromTestCase(CalendarTestNavigateEvents)
+    searchSuite = unittest.TestLoader().loadTestsFromTestCase(CalendarTestSearchEvents)
 
     # This will run the test suite.
-    unittest.TextTestRunner(verbosity=2).run(search_suite)
+    unittest.TextTestRunner(verbosity=2).run(navigateSuite)
+    unittest.TextTestRunner(verbosity=2).run(searchSuite)
 
 
 main()

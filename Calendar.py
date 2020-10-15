@@ -145,7 +145,6 @@ class Calendar:
         events += self.get_future_events()
         result_list = []
         for event in events:
-            print(event)
             event_time = event['start']['dateTime'].split('T', 1)
             if time in event_time[0]:
                 result = 'Event:' + event['summary'] + ' at ' + event['start'].get('dateTime',
@@ -158,6 +157,7 @@ class Calendar:
         if len(result_list) < 1:
             result_list = "Nothing showed up in your search"
         return result_list
+
 
     def search_events(self, keyword: str):
         """"
@@ -199,7 +199,7 @@ def get_date_iso(date_str: str):
 
 def main():
     primary_calendar = Calendar(get_calendar_api())
-    print(primary_calendar.get_events_with_reminders(primary_calendar.get_future_events()))
+    # print(primary_calendar.get_events_with_reminders(primary_calendar.get_future_events()))
 
     print('Please enter your choice')
     print('1. View past events.')
@@ -229,12 +229,12 @@ def main():
     # events = primary_calendar.get_upcoming_events(time_now, 10)
     # # events = primary_calendar.get_past_events()
     # # events = primary_calendar.get_future_events()
-    x = input("Enter date for search: ")
+    # x = input("Enter date for search: ")
 
-    while len(x) < 2:
-        print("Keyword should be at least 2 characters long")
-        x = input("Enter Keyword: ")
-    print(primary_calendar.search_events(x))
+    # while len(x) < 2:
+    #    print("Keyword should be at least 2 characters long")
+    #    x = input("Enter Keyword: ")
+    # print(primary_calendar.navigate_to_events(x))
     # if not events:
     #     print('No upcoming events found.')
 
