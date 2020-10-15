@@ -157,8 +157,10 @@ class Calendar:
                     result += '\nReminder in ' + str(reminder['minutes']) + ' minutes before event as ' + reminder[
                         'method']
                 result_list.append(result)
+        print('\n\n THE LENGTH', len(result_list))
         if len(result_list) < 1:
-            result_list = "Nothing showed up in your search"
+            result_list.append("Nothing showed up in your search")
+        print( result_list)
         return result_list
 
     def search_events(self, keyword: str):
@@ -244,16 +246,27 @@ def get_event_to_delete(calendar):
 
 def main():
     primary_calendar = Calendar(get_calendar_api())
-    # print(primary_calendar.get_events_with_reminders(primary_calendar.get_future_events()))
 
     choice = get_choice()
 
-    while choice < 6:
+    while choice != 6:
         if choice == 1:
-            events = primary_calendar.get_past_events()
+            print("Enter number of years that you would like to view. (Enter any letter or character to view default years(5))")
+            years = input('')
+            try:
+                int(years)
+                events = primary_calendar.get_past_events(years)
+            except ValueError:
+                events = primary_calendar.get_past_events()
             print_events(events, primary_calendar)
         elif choice == 2:
-            events = primary_calendar.get_past_events()
+            print("Enter number of years that you would like to view. (Enter any letter or character to view default years(2))")
+            years = input('')
+            try:
+                int(years)
+                events = primary_calendar.get_past_events(years)
+            except ValueError:
+                events = primary_calendar.get_past_events()
             print_events(events, primary_calendar)
         elif choice == 3:
             date = input("Enter date for search: ")
@@ -266,28 +279,15 @@ def main():
         elif choice == 5:
             delete_event = get_event_to_delete(primary_calendar)
             primary_calendar.delete_events(delete_event)
+        else:
+            print('Invalid input')
 
-        choice = get_choice()
-
-    # time_now = datetime.datetime.utcnow().isoformat() + 'Z'  # 'Z' indicates UTC time
-    # events = primary_calendar.get_upcoming_events(time_now, 10)
-    # # events = primary_calendar.get_past_events()
-    # # events = primary_calendar.get_future_events()
-    x = input("Enter date for search: ")
-
-    while len(x) < 2:
-        print("Keyword should be at least 2 characters long")
-        x = input("Enter Keyword: ")
-    print(primary_calendar.search_events(x))
-    # if not events:
-    #     print('No upcoming events found.')
-
-    # i = 0
-    # for event in events:
-    #     i += 1
-    #     start = event['start'].get('dateTime', event['start'].get('date'))
-    #     print(i, start, event['summary'])
-
+        do_over = input("If you would like to keep using the program please type Y")
+        if do_over.lower() == 'y':
+            choice = get_choice()
+        else:
+            choice = 6
+    print('Thank you for using our program!!')
 
 if __name__ == "__main__":  # Prevents the main() function from being called by the test suite runner
     main()
