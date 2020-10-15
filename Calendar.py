@@ -85,7 +85,7 @@ class Calendar:
         self.event_reminder_defaults = events_response['defaultReminders'][0]
         return events_response.get('items', [])
 
-    def _get_events_from_year(self, api, years):
+    def _get_events_from_year(self, years):
         """
         Get events within specified year limit
             positive for years to the future, negative for years in the past
@@ -111,7 +111,7 @@ class Calendar:
             raise ValueError("Year Input cannot be negative")
 
         year_input = - years_past
-        return self._get_events_from_year( year_input)
+        return self._get_events_from_year(year_input)
 
     def get_future_events(self,years_future: int = DEFAULT_FUTURE_YEAR_RANGE):
         """
@@ -158,7 +158,6 @@ class Calendar:
                     result += '\nReminder in ' + str(reminder['minutes']) + ' minutes before event as ' + reminder[
                         'method']
                 result_list.append(result)
-        print('\n\n THE LENGTH', len(result_list))
         if len(result_list) < 1:
             result_list.append("Nothing showed up at this time: " + time)
         return result_list
