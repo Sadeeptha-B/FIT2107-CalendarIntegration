@@ -158,7 +158,7 @@ class Calendar:
             try:
                 eventTime = event['start']['dateTime'].split('T', 1)
             except KeyError:
-                eventTime = event['start']['date']
+                eventTime = [event['start']['date']]
             if time in eventTime[0]:
                 result = 'Event:' + event['summary'] + ' at ' + event['start'].get('dateTime',
                                                                                    event['start'].get('date'))
