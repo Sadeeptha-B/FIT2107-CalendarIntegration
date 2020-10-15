@@ -69,35 +69,67 @@ class CalendarTestGetEvents(unittest.TestCase):
         self.assertNotEqual(events.items, [])
 
 
-<<<<<<< Updated upstream
-
-=======
 class CalendarTestSearchEvents(unittest.TestCase):
     def setUp(self) -> None:
-        self.Calendar = Calendar(MagicMock())
+        self.mock_api = MagicMock()
+        self.Calendar = Calendar(self.mock_api)
 
-    def test_search_events(self):
-        self.Calendar.get_past_events = MagicMock(return_value={'id': '1olba0rgbijmfv72m1126kpftf',
-                                                                'summary': 'Past Event Summary',
-                                                                'start': {'dateTime': '2020-10-13T11:30:00+05:30'},
-                                                                'reminders': {'useDefault': True}})
-        self.Calendar.get_future_events = MagicMock(return_value={'id': '4odta0egtjvboj82p4326esnvw',
-                                                                  'summary': 'Future Event Summary',
-                                                                  'start': {'dateTime': '2020-10-22T18:30:00+05:30'},
-                                                                  'reminders': {'useDefault': True}})
+    def test_search_events_with_default_reminders(self):
+        self.Calendar.get_past_events = MagicMock(return_value=[{'id': '1olba0rgbijmfv72m1126kpftf',
+                                                                 'summary': 'Past Event Summary',
+                                                                 'start': {'dateTime': '2020-10-13T11:30:00+05:30'},
+                                                                 'reminders': {'useDefault': True}}])
+        self.Calendar.get_future_events = MagicMock(return_value=[{'id': '4odta0egtjvboj82p4326esnvw',
+                                                                   'summary': 'Future Event Summary',
+                                                                   'start': {'dateTime': '2020-10-22T18:30:00+05:30'},
+                                                                   'reminders': {'useDefault': True}}])
 
         searchResult = self.Calendar.search_events('past')
         self.assertEqual(
-            ['Event:Past Event Summary at 2020-10-13T16:30:00+11:00Reminder in 10 minutes before event', searchResult])
->>>>>>> Stashed changes
+            ['Event:Past Event Summary at 2020-10-13T11:30:00+05:30\nReminder in 10 minutes before event'],
+            searchResult)
+
+    def test_search_events_with_user_reminders(self):
+        self.Calendar.get_past_events = MagicMock(return_value=[{'id': '1olba0rgbijmfv72m1126kpftf',
+                                                                 'summary': 'Past Event Summary',
+                                                                 'start': {'dateTime': '2020-10-13T11:30:00+05:30'},
+                                                                 'reminders': {'useDefault': True}}])
+        self.Calendar.get_future_events = MagicMock(return_value=[{'id': '4odta0egtjvboj82p4326esnvw',
+                                                                   'summary': 'Future Event Summary',
+                                                                   'start': {'dateTime': '2020-10-22T18:30:00+05:30'},
+                                                                   'reminders': {'useDefault': False, 'overrides': [
+                                                                       {'method': 'email', 'minutes': 20},
+                                                                       {'method': 'popup', 'minutes': 10}]}
+                                                                   }])
+
+        searchResult = self.Calendar.search_events('future')
+        self.assertEqual(
+            [
+                'Event:Future Event Summary at 2020-10-22T18:30:00+05:30\nReminder in 20 minutes before event as email\nReminder in 10 minutes before event as popup'],
+            searchResult)
+
+    def test_search_non_existent_events(self):
+        self.Calendar.get_past_events = MagicMock(return_value=[{'id': '1olba0rgbijmfv72m1126kpftf',
+                                                                 'summary': 'Past Event Summary',
+                                                                 'start': {'dateTime': '2020-10-13T11:30:00+05:30'},
+                                                                 'reminders': {'useDefault': True}}])
+        self.Calendar.get_future_events = MagicMock(return_value=[{'id': '4odta0egtjvboj82p4326esnvw',
+                                                                   'summary': 'Future Event Summary',
+                                                                   'start': {
+                                                                       'dateTime': '2020-10-22T18:30:00+05:30'},
+                                                                   'reminders': {'useDefault': True}}])
+        searchResult = self.Calendar.search_events('anything')
+        self.assertEqual(
+            ["Nothing showed up in your search"],
+            searchResult)
 
 
 def main():
     # Create the test suite from the cases above.
-    suite = unittest.TestLoader().loadTestsFromTestCase(CalendarTestSearchEvents)
+    searchSuite = unittest.TestLoader().loadTestsFromTestCase(CalendarTestSearchEvents)
 
     # This will run the test suite.
-    unittest.TextTestRunner(verbosity=2).run(suite)
+    unittest.TextTestRunner(verbosity=2).run(searchSuite)
 
 
 main()
