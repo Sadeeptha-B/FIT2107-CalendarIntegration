@@ -81,10 +81,11 @@ class Calendar:
                                                  maxResults=number_of_events, singleEvents=True,
                                                  orderBy='startTime').execute()
 
+        print(events_response)
         self.event_reminder_defaults = events_response['defaultReminders'][0]
         return events_response.get('items', [])
 
-    def _get_events_from_year(self, years):
+    def _get_events_from_year(self, api, years):
         """
         Get events within specified year limit
             positive for years to the future, negative for years in the past
@@ -110,15 +111,15 @@ class Calendar:
             raise ValueError("Year Input cannot be negative")
 
         year_input = - years_past
-        return self._get_events_from_year(year_input)
+        return self._get_events_from_year( year_input)
 
-    def get_future_events(self, years_future: int = DEFAULT_FUTURE_YEAR_RANGE):
+    def get_future_events(self,years_future: int = DEFAULT_FUTURE_YEAR_RANGE):
         """
          Get events within specified year limit in the future
         """
         if years_future < 0:
             raise ValueError("Year Input cannot be negative")
-        return self._get_events_from_year(years_future)
+        return self._get_events_from_year( years_future)
 
     def get_events_with_reminders(self, events):
         """
@@ -158,7 +159,7 @@ class Calendar:
                         'method']
                 result_list.append(result)
         if len(result_list) < 1:
-            result_list = "Nothing showed up in your search"
+            result_list.append("Nothing showed up at this time: " + time)
         return result_list
 
     def search_events(self, keyword: str):
@@ -188,6 +189,19 @@ class Calendar:
         self.api.events().delete(calendarId=self.calendar_id, eventId=event_id).execute()
 
 
+def get_choice():
+    print('Please enter your choice')
+    print('1. View past events.')
+    print('2. View future events')
+    print('3. Navigate to an event with the date')
+    print('4. Search for an event and reminders')
+    print('5. Delete an event and reminders')
+    print('6. Exit')
+
+    choice = int(input('Your choice as an integer: '))
+
+    return choice
+
 def get_date_iso(date_str: str):
     """
     :param: date_str should be in utc format
@@ -215,20 +229,6 @@ def print_results(result_list):
         i += 1
 
 
-def get_choice():
-    print('Please enter your choice')
-    print('1. View past events.')
-    print('2. View future events')
-    print('3. Navigate to an event with the date')
-    print('4. Search for an event and reminders')
-    print('5. Delete an event and reminders')
-    print('6. Exit')
-
-    choice = int(input('Your choice as an integer: '))
-
-    return choice
-
-
 def get_event_to_delete(calendar):
     print('Select event to be deleted')
     events = calendar.get_past_events()
@@ -244,7 +244,8 @@ def get_event_to_delete(calendar):
 
 def main():
     primary_calendar = Calendar(get_calendar_api())
-    # print(primary_calendar.get_events_with_reminders(primary_calendar.get_future_events()))
+    # time_now = datetime.datetime.utcnow().isoformat() + 'Z'  # 'Z' indicates UTC time
+    # primary_calendar.get_upcoming_events(time_now, 3)
 
     choice = get_choice()
 
