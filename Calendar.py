@@ -182,10 +182,11 @@ class Calendar:
         """"
         Allows the user to search for events
         """
-        events = self.get_past_events()
+        events = []
+        events += self.get_past_events()
         events += self.get_future_events()
         resultList = []
-        
+
         for event in events:
             if keyword.lower() in event['summary'].lower():
                 result = 'Event:' + event['summary'] + ' at ' + event['start'].get('dateTime', event['start'].get('date'))
@@ -198,8 +199,6 @@ class Calendar:
         if len(resultList) < 1:
             resultList.append("Nothing showed up in your search")
         return resultList
-
-
 
     def delete_events(self, event):
         eventId = event['id']

@@ -1,5 +1,5 @@
 import unittest
-from unittest.mock import Mock
+from unittest.mock import Mock, MagicMock
 from Calendar import Calendar
 
 
@@ -7,6 +7,7 @@ class CalendarTestGetEvents(unittest.TestCase):
     """
     Test suite to test for upcoming events
     """
+
     def setUp(self) -> None:
         self.mock_api = Mock()
         self.Calendar = Calendar(self.mock_api)
@@ -26,7 +27,7 @@ class CalendarTestGetEvents(unittest.TestCase):
 
         # Invalid Cases : Events cannot be zero
         num_events = 0
-        self.assertRaises(ValueError, self.Calendar.get_upcoming_events,time, num_events)
+        self.assertRaises(ValueError, self.Calendar.get_upcoming_events, time, num_events)
 
         num_events = -5
         self.assertRaises(ValueError, self.Calendar.get_upcoming_events, time, num_events)
@@ -54,8 +55,8 @@ class CalendarTestGetEvents(unittest.TestCase):
         # Invalid Inputs
         year_input = -3
 
-        self.assertRaises(ValueError, self.Calendar.get_past_events,year_input)  # Past
-        self.assertRaises(ValueError, self.Calendar.get_future_events, year_input) # future
+        self.assertRaises(ValueError, self.Calendar.get_past_events, year_input)  # Past
+        self.assertRaises(ValueError, self.Calendar.get_future_events, year_input)  # future
 
         # Default Obeyed
         self.assertEqual(self.Calendar.get_future_events.__defaults__[0], default_future_year_limit)
@@ -68,12 +69,32 @@ class CalendarTestGetEvents(unittest.TestCase):
         self.assertNotEqual(events.items, [])
 
 
+<<<<<<< Updated upstream
 
+=======
+class CalendarTestSearchEvents(unittest.TestCase):
+    def setUp(self) -> None:
+        self.Calendar = Calendar(MagicMock())
+
+    def test_search_events(self):
+        self.Calendar.get_past_events = MagicMock(return_value={'id': '1olba0rgbijmfv72m1126kpftf',
+                                                                'summary': 'Past Event Summary',
+                                                                'start': {'dateTime': '2020-10-13T11:30:00+05:30'},
+                                                                'reminders': {'useDefault': True}})
+        self.Calendar.get_future_events = MagicMock(return_value={'id': '4odta0egtjvboj82p4326esnvw',
+                                                                  'summary': 'Future Event Summary',
+                                                                  'start': {'dateTime': '2020-10-22T18:30:00+05:30'},
+                                                                  'reminders': {'useDefault': True}})
+
+        searchResult = self.Calendar.search_events('past')
+        self.assertEqual(
+            ['Event:Past Event Summary at 2020-10-13T16:30:00+11:00Reminder in 10 minutes before event', searchResult])
+>>>>>>> Stashed changes
 
 
 def main():
     # Create the test suite from the cases above.
-    suite = unittest.TestLoader().loadTestsFromTestCase(CalendarTestGetEvents)
+    suite = unittest.TestLoader().loadTestsFromTestCase(CalendarTestSearchEvents)
 
     # This will run the test suite.
     unittest.TextTestRunner(verbosity=2).run(suite)
