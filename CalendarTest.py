@@ -13,7 +13,7 @@ class CalendarTestGetEvents(unittest.TestCase):
         self.Calendar = Calendar(self.mock_api)
 
     def test_get_reminders(self):
-    #     Removed temporarily
+        # Removed temporarily
 
     def test_get_upcoming_events_number(self):
         """
