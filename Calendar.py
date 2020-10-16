@@ -122,23 +122,6 @@ class Calendar:
             raise ValueError("Year Input cannot be negative")
         return self._get_events_from_year(years_future)
 
-    def get_events_with_reminders(self, events):
-        """
-        Get reminders under a given event, provided the list of events
-        """
-        for event in events:
-            if event['reminders']['useDefault']:
-                event['reminders'] = [self.reminder_defaults]
-            else:
-                try:
-                    event['reminders']['overrides']
-                except KeyError:
-                    event['reminders'] = []
-                else:
-                    event['reminders'] = event['reminders']['overrides']
-
-        return events
-
     def get_event_reminder(self, event):
         if event['reminders']['useDefault']:
             event['reminders'] = [self.reminder_defaults]
@@ -211,7 +194,13 @@ def get_date_iso(date_str: str):
     return date_str.isoformat() + 'Z'
 
 
-def get_choice():
+"""
+The following is runner code unrelated to the functionality and is only to be used
+demo the functionality. Therefore, this code is not used in coverage testing
+"""
+
+
+def get_choice():      #
     print('Please enter your choice')
     print('1. View past events.')
     print('2. View future events')

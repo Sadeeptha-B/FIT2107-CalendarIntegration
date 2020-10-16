@@ -7,8 +7,22 @@ exclude_lines =
       # Enable default exclusion
       pragma: no cover
 
-      # Ignore exception coverage
-      raise ValueError
+      # Do not cover : Runner code for the UI
+      def get_choice
+      def print_events
+      def print_results
+      def get_event_to_delete
+      def main
+
+      # Non runnable code
+      if __name__ == "__main__":
+
+show_missing = True
+
+[html]
+title = "FIT2107 Assignment 2 : Calendar Application: Coverage Report"
+
+
 
 
 

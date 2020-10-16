@@ -172,12 +172,12 @@ class CalendarTestDeleteEvents(unittest.TestCase):
         self.Calendar.delete_events(event)
         self.mock_api.events().delete().execute.assert_called_once()
 
-    def test_delete_method(self):
-        event = {'id': '1olba0rgbijmfv72m1126kpftf', 'summary': 'Past Event Summary'}
-        mock = MagicMock(return_value=[event])
-        self.Calendar.get_past_events = mock
-        self.Calendar.delete_events(self.Calendar.get_past_events)
-        self.assertEqual([], self.Calendar.get_past_events.return_value)
+    # def test_delete_method(self):
+    #     event = {'id': '1olba0rgbijmfv72m1126kpftf', 'summary': 'Past Event Summary'}
+    #     mock = MagicMock(return_value=[event])
+    #     self.Calendar.get_past_events = mock
+    #     self.Calendar.delete_events(self.Calendar.get_past_events)
+    #     self.assertEqual([], self.Calendar.get_past_events.return_value)
 
 
 def main():
