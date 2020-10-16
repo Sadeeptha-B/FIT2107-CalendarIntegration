@@ -142,6 +142,7 @@ class Calendar:
     def get_event_reminder(self, event):
         if event['reminders']['useDefault']:
             event['reminders'] = [self.reminder_defaults]
+        else:
             try:
                 event['reminders']['overrides']
             except KeyError:
@@ -200,6 +201,7 @@ class Calendar:
     def delete_events(self, event):
         event_id = event['id']
         self.api.events().delete(calendarId=self.calendar_id, eventId=event_id).execute()
+        print('Event ', event['summary'], ' Successfully Deleted')
 
 
 def get_date_iso(date_str: str):
@@ -209,39 +211,102 @@ def get_date_iso(date_str: str):
     return date_str.isoformat() + 'Z'
 
 
+def get_choice():
+    print('Please enter your choice')
+    print('1. View past events.')
+    print('2. View future events')
+    print('3. Navigate to an event with the date')
+    print('4. Search for an event and reminders')
+    print('5. Delete an event and reminders')
+    print('6. Exit')
+
+    choice = int(input('Your choice as an integer: '))
+
+    return choice
+
+
+def print_events(events, calendar):
+    result_list = []
+    for event in events:
+        result = 'Event:' + event['summary'] + ' at ' + event['start'].get('dateTime',
+                                                                           event['start'].get('date'))
+        event = calendar.get_event_reminder(event)
+        for reminder in event['reminders']:
+            result += '\nReminder in ' + str(reminder['minutes']) + ' minutes before event as ' + reminder[
+                'method']
+        result_list.append(result)
+    print_results(result_list)
+
+
+def print_results(result_list):
+    i = 1
+    for printResult in result_list:
+        print(i, printResult)
+        i += 1
+
+
+def get_event_to_delete(calendar):
+    print('Select event to be deleted')
+    events = calendar.get_past_events()
+    events += calendar.get_future_events()
+    print_events(events, calendar)
+    try:
+        events_index = int(input('Enter the number of the event that you wish to delete: ')) - 1
+        return events[events_index]
+    except IndexError:
+        print("Index out of bounds")
+        get_event_to_delete(calendar)
+
+
 def main():
     primary_calendar = Calendar(get_calendar_api())
-    # print(primary_calendar.get_events_with_reminders(primary_calendar.get_future_events()))
-
-    # print('Please enter your choice')
-    # print('1. View past events.')
-    # print('2. View future events')
-    # print('3. Feature 3')
-    # print('4. Search for an event and reminders')
-    # print('5. Delete an event and reminders')
-    # print('6. Exit')
 
     # time_now = datetime.datetime.utcnow().isoformat() + 'Z'  # 'Z' indicates UTC time
+    # primary_calendar.get_upcoming_events(time_now, 3)
 
-    # choice = input('Your choice as an integer: ')
 
-    # events = primary_calendar.get_upcoming_events(time_now, 10)
-    # # events = primary_calendar.get_past_events()
-    # # events = primary_calendar.get_future_events()
-    # x = input("Enter date for search: ")
+    choice = get_choice()
 
-    # while len(x) < 2:
-    #    print("Keyword should be at least 2 characters long")
-    #    x = input("Enter Keyword: ")
-    # print(primary_calendar.navigate_to_events(x))
-    # if not events:
-    #     print('No upcoming events found.')
+    while choice != 6:
+        if choice == 1:
+            print("Enter number of years that you would like to view. (Enter any letter or character to view default years(5))")
+            years = input('')
+            try:
+                years = int(years)
+                events = primary_calendar.get_past_events(years)
+            except ValueError:
+                events = primary_calendar.get_past_events()
+            print_events(events, primary_calendar)
+        elif choice == 2:
+            print("Enter number of years that you would like to view. (Enter any letter or character to view default years(2))")
+            years = input('')
+            try:
+                years = int(years)
+                events = primary_calendar.get_future_events(years)
+            except ValueError:
+                events = primary_calendar.get_future_events()
+            print_events(events, primary_calendar)
+        elif choice == 3:
+            date = input("Enter date for search: ")
+            results = primary_calendar.navigate_to_events(date)
+            print_results(results)
+        elif choice == 4:
+            keyword = input("Enter keyword for search: ")
+            results = primary_calendar.search_events(keyword)
+            print_results(results)
+        elif choice == 5:
+            delete_event = get_event_to_delete(primary_calendar)
+            primary_calendar.delete_events(delete_event)
+        else:
+            print('Invalid input')
 
-    # i = 0
-    # for event in events:
-    #     i += 1
-    #     start = event['start'].get('dateTime', event['start'].get('date'))
-    #     print(i, start, event['summary'])
+        do_over = input("If you would like to keep using the program please type Y")
+        if do_over.lower() == 'y':
+            choice = get_choice()
+        else:
+            choice = 6
+    print('Thank you for using our program!!')
+
 
 
 if __name__ == "__main__":  # Prevents the main() function from being called by the test suite runner
