@@ -58,6 +58,11 @@ class Calendar:
     DEFAULT_PAST_YEAR_RANGE = 5
 
     def __init__(self, api, calendar_id: str = DEFAULT_CALENDAR_ID):
+        """"
+        Initialises the Calendar, with the default calendarId
+        :param:  api - The google calendar API reference
+                 calendar_id - The id of the calendar, by default it is set to the users primary calendar
+        """
         self.api = api
         self.calendar_id = calendar_id
         self.reminder_defaults = self.get_calendar_reminder_defaults()
@@ -65,7 +70,8 @@ class Calendar:
 
     def get_calendar_reminder_defaults(self):
         """
-        Get the global reminder defaults for calendar 
+        Get the global reminder defaults for calendar
+        :return: The calendars default reminder
         """
         calendar_resource = self.api.calendarList().get(calendarId=self.calendar_id).execute()
         return calendar_resource['defaultReminders'][0]  # REVIEW: Retrieve reminder 'method' as well?
@@ -73,6 +79,9 @@ class Calendar:
     def get_upcoming_events(self, starting_time: str, number_of_events: int):
         """
         Prints the start and name of the next n events on the user's calendar.
+        :param:  starting_time - The time from when the events need to be found
+                 number_of_events - The number of events that the user needs
+        :return: A list of upcoming events
         """
         if number_of_events <= 0:
             raise ValueError("Number of events must be at least 1")
@@ -88,7 +97,9 @@ class Calendar:
     def _get_events_from_year(self, years):
         """
         Get events within specified year limit
-            positive for years to the future, negative for years in the past
+        :param:  years - The number of years that need to display events
+                            positive for years to the future, negative for years in the past
+        :return: A list of the events upto the specified number of years
         """
         time_now = datetime.datetime.utcnow()
         change_date = time_now + relativedelta(years=years)
@@ -107,6 +118,8 @@ class Calendar:
     def get_past_events(self, years_past: int = DEFAULT_PAST_YEAR_RANGE):
         """
          Get events within specified year limit in the past
+         :param: years_past - The number of years
+        :return: A list of the events in the past
         """
         if years_past < 0:
             raise ValueError("Year Input cannot be negative")
@@ -117,12 +130,38 @@ class Calendar:
     def get_future_events(self, years_future: int = DEFAULT_FUTURE_YEAR_RANGE):
         """
          Get events within specified year limit in the future
+         :param: years_future - The number of years
+        :return: A list of the events in the future
         """
         if years_future < 0:
             raise ValueError("Year Input cannot be negative")
         return self._get_events_from_year(years_future)
 
+    def get_events_with_reminders(self, events):
+        """
+        Get reminders under a given event, provided the list of events
+        :param:  events - the list of events to return reminders from
+        :return: A list of the formatted event reminders
+        """
+        for event in events:
+            if event['reminders']['useDefault']:
+                event['reminders'] = [self.reminder_defaults]
+            else:
+                try:
+                    event['reminders']['overrides']
+                except KeyError:
+                    event['reminders'] = []
+                else:
+                    event['reminders'] = event['reminders']['overrides']
+
+        return events
+
     def get_event_reminder(self, event):
+        """"
+        Returns the event with the reminder reformatted for later use
+        :param:  event - The event that will be reformatted
+        :return: A formatted event reminder
+        """
         if event['reminders']['useDefault']:
             event['reminders'] = [self.reminder_defaults]
         else:
@@ -135,6 +174,11 @@ class Calendar:
         return event
 
     def navigate_to_events(self, time):
+        """
+        Allows Users to navigate to events within a specific timeline
+        :param:  time - The time that the user wishes to go to
+        :return: A list of the search results
+        """
         events = self.get_past_events()
         events += self.get_future_events()
         resultList = []
@@ -160,6 +204,8 @@ class Calendar:
     def search_events(self, keyword: str):
         """"
         Allows the user to search for events
+        :param:  keyword - The keyword that the user wishes to search with
+        :return: A list of the search results
         """
 
         events = self.get_past_events()
@@ -182,6 +228,10 @@ class Calendar:
         return resultList
 
     def delete_events(self, event):
+        """"
+        Deletes the event from the calendar
+        :param: event - The event that needs to be deleted
+        """
         event_id = event['id']
         self.api.events().delete(calendarId=self.calendar_id, eventId=event_id).execute()
         print('Event ', event['summary'], ' Successfully Deleted')
