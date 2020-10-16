@@ -2,12 +2,10 @@
 
 Team - PepeD
 
-            Kaveesha Nissanka ()
+* Kaveesha Nissanka (30769124)
 
-            Sadeeptha Bandara (30769140)
+* Sadeeptha Bandara (30769140)
 
-
-[TOC]
 
 
 
@@ -65,11 +63,11 @@ When generating test cases, our workflow will attempt to follow,
 
 1. Attempt to devise blackbox tests for the given scenario
 
-           This will help to decide on all the tests to verify that the requirement is being met
+    * This will help to decide on all the tests to verify that the requirement is being met
 
 2. Implementing test cases/ Implementing the program
 
-           Based on how comfortable the team member is with the test, it chosen whether to write the test first, or implement the functionality first
+    * Based on how comfortable the team member is with the test, it chosen whether to write the test first, or implement the functionality first
 
 3. Look at the specific implementation details of the functionality and decide if any tests are required to test that specific implementation, if there are, implementing them.
 4. Performing coverage testing on the implementation, to check if all branches of logic are covered.
@@ -90,7 +88,7 @@ In following the test approach above, the testing tools used, will involve the f
 **Unittest**:
 
 
-    The testing framework used, will be Unittest, which comes by default, with standard Python installation. Different capabilities within this library, including mocking, patching, creating test suites, and test fixtures, will be used.
+The testing framework used, will be Unittest, which comes by default, with standard Python installation. Different capabilities within this library, including mocking, patching, creating test suites, and test fixtures, will be used.
 
     
 
