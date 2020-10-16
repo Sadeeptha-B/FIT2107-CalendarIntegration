@@ -33,6 +33,9 @@ class CalendarTestGetEvents(unittest.TestCase):
         self.assertRaises(ValueError, self.Calendar.get_upcoming_events, time, num_events)
 
     def test_get_upcoming_events_api_call(self):
+        """
+        Checks if the api call for event lists work
+        """
         num_events = 2
         time = "2020-08-03T00:00:00.000000Z"
 
@@ -49,6 +52,10 @@ class CalendarTestGetEvents(unittest.TestCase):
         self.assertNotEqual(events.items, [])
 
     def test_year_input_valid(self):
+        """
+        Checks if the get events methods raise an exception for an improper input
+        Checks if the get events methods have the correct default values
+        """
         default_future_year_limit = 2
         default_past_year_limit = 5
 
@@ -63,6 +70,9 @@ class CalendarTestGetEvents(unittest.TestCase):
         self.assertEqual(self.Calendar.get_past_events.__defaults__[0], default_past_year_limit)
 
     def test_events_future(self):
+        """"
+        Tests the get_future_event method in Calendar for the correct response
+        """
         self.mock_api.events().list().execute()["items"] = MagicMock(side_effect=KeyError())
 
         try:
@@ -72,11 +82,17 @@ class CalendarTestGetEvents(unittest.TestCase):
 
 
 class CalendarTestNavigateEvents(unittest.TestCase):
+    """
+    Test suite for the navigate method
+    """
     def setUp(self) -> None:
         self.mock_api = MagicMock()
         self.Calendar = Calendar(self.mock_api)
 
     def test_navigate_events_with_reminders(self):
+        """"
+        Tests the navigate method for the correct result if an event with the given time exists, and that they are in the proper format
+        """
         self.Calendar.get_past_events = MagicMock(return_value=[{'id': '1olba0rgbijmfv72m1126kpftf',
                                                                  'summary': 'Past Event Summary',
                                                                  'start': {'date': '2020-10-13'},
@@ -99,16 +115,25 @@ class CalendarTestNavigateEvents(unittest.TestCase):
             searchResult)
 
     def test_navigate_to_non_existent_events_(self):
+        """"
+        Tests the navigate method for the correct result if an event with the given time given does not exist
+        """
         searchResult = self.Calendar.navigate_to_events('2020-10')
         self.assertEqual("Nothing showed up at this time: 2020-10", searchResult)
 
 
 class CalendarTestSearchEvents(unittest.TestCase):
+    """
+    Test suite for the search method
+    """
     def setUp(self) -> None:
         self.mock_api = MagicMock()
         self.Calendar = Calendar(self.mock_api)
 
     def test_search_events_with_default_reminders(self):
+        """"
+        Tests the search method to see if it returns the events and default reminder in the proper format
+        """
         self.Calendar.get_past_events = MagicMock(return_value=[{'id': '1olba0rgbijmfv72m1126kpftf',
                                                                  'summary': 'Past Event Summary',
                                                                  'start': {'dateTime': '2020-10-13T11:30:00+05:30'},
@@ -124,6 +149,9 @@ class CalendarTestSearchEvents(unittest.TestCase):
             searchResult)
 
     def test_search_events_with_user_reminders(self):
+        """"
+        Tests the search method to see if it returns the events and user reminders in the proper format
+        """
         self.Calendar.get_past_events = MagicMock(return_value=[{'id': '1olba0rgbijmfv72m1126kpftf',
                                                                  'summary': 'Past Event Summary',
                                                                  'start': {'dateTime': '2020-10-13T11:30:00+05:30'},
@@ -143,6 +171,9 @@ class CalendarTestSearchEvents(unittest.TestCase):
             searchResult)
 
     def test_search_non_existent_events(self):
+        """"
+        Tests the search function for the correct result if an event with the keyword given does not exist
+        """
         self.Calendar.get_past_events = MagicMock(return_value=[{'id': '1olba0rgbijmfv72m1126kpftf',
                                                                  'summary': 'Past Event Summary',
                                                                  'start': {'dateTime': '2020-10-13T11:30:00+05:30'},
@@ -159,12 +190,17 @@ class CalendarTestSearchEvents(unittest.TestCase):
 
 
 class CalendarTestDeleteEvents(unittest.TestCase):
+    """
+    Test suite for the delete method
+    """
     def setUp(self) -> None:
         self.mock_api = MagicMock()
         self.Calendar = Calendar(self.mock_api)
 
     def test_delete_api_call(self):
-
+        """"
+        Tests the delete API call to check if it actually goes through
+        """
         event = {'id': '1olba0rgbijmfv72m1126kpftf', 'summary': 'Past Event Summary',
                  'start': {'dateTime': '2020-10-13T11:30:00+05:30'}, 'reminders': {'useDefault': True}}
 
@@ -172,12 +208,16 @@ class CalendarTestDeleteEvents(unittest.TestCase):
         self.Calendar.delete_events(event)
         self.mock_api.events().delete().execute.assert_called_once()
 
-    # def test_delete_method(self):
-    #     event = {'id': '1olba0rgbijmfv72m1126kpftf', 'summary': 'Past Event Summary'}
-    #     mock = MagicMock(return_value=[event])
-    #     self.Calendar.get_past_events = mock
-    #     self.Calendar.delete_events(self.Calendar.get_past_events)
-    #     self.assertEqual([], self.Calendar.get_past_events.return_value)
+    def test_delete_method(self):
+        """"
+        Checks to see if the delete API call deletes the events
+        """
+        event = {'id': '1olba0rgbijmfv72m1126kpftf', 'summary': 'Past Event Summary'}
+
+        self.Calendar.get_past_events = MagicMock(return_value=[event])
+        self.mock_api.events().delete().execute = self.Calendar.get_past_events = MagicMock(return_value=[])
+        self.Calendar.delete_events(self.Calendar.get_past_events)
+        self.assertEqual([], self.Calendar.get_past_events.return_value)
 
 
 def main():
@@ -185,11 +225,13 @@ def main():
     get_event_suite = unittest.TestLoader().loadTestsFromTestCase(CalendarTestGetEvents)
     navigate_suite = unittest.TestLoader().loadTestsFromTestCase(CalendarTestNavigateEvents)
     search_suite = unittest.TestLoader().loadTestsFromTestCase(CalendarTestSearchEvents)
+    delete_suite = unittest.TestLoader().loadTestsFromTestCase(CalendarTestDeleteEvents)
 
     # This will run the test suite.
     unittest.TextTestRunner(verbosity=2).run(get_event_suite)
     unittest.TextTestRunner(verbosity=2).run(navigate_suite)
     unittest.TextTestRunner(verbosity=2).run(search_suite)
+    unittest.TextTestRunner(verbosity=2).run(delete_suite)
 
 
 if __name__ == "__main__":
