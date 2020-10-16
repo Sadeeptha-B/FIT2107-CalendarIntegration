@@ -1,5 +1,5 @@
 import unittest
-from unittest.mock import Mock, MagicMock
+from unittest.mock import Mock, MagicMock, patch
 from Calendar import Calendar
 
 
@@ -158,6 +158,28 @@ class CalendarTestSearchEvents(unittest.TestCase):
             searchResult)
 
 
+class CalendarTestDeleteEvents(unittest.TestCase):
+    def setUp(self) -> None:
+        self.mock_api = MagicMock()
+        self.Calendar = Calendar(self.mock_api)
+
+    def test_delete_api_call(self):
+
+        event = {'id': '1olba0rgbijmfv72m1126kpftf', 'summary': 'Past Event Summary',
+                 'start': {'dateTime': '2020-10-13T11:30:00+05:30'}, 'reminders': {'useDefault': True}}
+
+        self.mock_api.events().delete().execute = MagicMock()
+        self.Calendar.delete_events(event)
+        self.mock_api.events().delete().execute.assert_called_once()
+
+    def test_delete_method(self):
+        event = {'id': '1olba0rgbijmfv72m1126kpftf', 'summary': 'Past Event Summary'}
+        mock = MagicMock(return_value=[event])
+        self.Calendar.get_past_events = mock
+        self.Calendar.delete_events(self.Calendar.get_past_events)
+        self.assertEqual([], self.Calendar.get_past_events.return_value)
+
+
 def main():
     # Create the test suite from the cases above.
     get_event_suite = unittest.TestLoader().loadTestsFromTestCase(CalendarTestGetEvents)
@@ -165,7 +187,6 @@ def main():
     search_suite = unittest.TestLoader().loadTestsFromTestCase(CalendarTestSearchEvents)
 
     # This will run the test suite.
-
     unittest.TextTestRunner(verbosity=2).run(get_event_suite)
     unittest.TextTestRunner(verbosity=2).run(navigate_suite)
     unittest.TextTestRunner(verbosity=2).run(search_suite)

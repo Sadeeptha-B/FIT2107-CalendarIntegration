@@ -198,8 +198,8 @@ class Calendar:
         return resultList
 
     def delete_events(self, event):
-        eventId = event['id']
-        self.api.events().delete(calendarId=self.calendar_id, eventId=eventId).execute()
+        event_id = event['id']
+        self.api.events().delete(calendarId=self.calendar_id, eventId=event_id).execute()
 
 
 def get_date_iso(date_str: str):
