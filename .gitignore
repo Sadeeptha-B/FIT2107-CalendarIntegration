@@ -5,3 +5,4 @@ credentials.json
 token.pickle
 __pycache__/
 venv
+htmlcov

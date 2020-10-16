@@ -3,10 +3,14 @@ Calendar application making use of Google Calendar API
 
 Initial base code adapted from
     # https://developers.google.com/calendar/quickstart/python
+
+
+NOTE: If the Google Calendar allows to set more than one default setting for Calendar/Event
+reminders , it must be noted that this application will only support the retrieval of 
+one default reminder setting.
 """
 
 __author__ = "Sadeeptha Bandara, Kaveesha Nissanka"
-
 
 import datetime
 import pickle
@@ -56,17 +60,29 @@ class Calendar:
     def __init__(self, api, calendar_id: str = DEFAULT_CALENDAR_ID):
         self.api = api
         self.calendar_id = calendar_id
+        self.reminder_defaults = self.get_calendar_reminder_defaults()
+        self.event_reminder_defaults = self.reminder_defaults
+
+    def get_calendar_reminder_defaults(self):
+        """
+        Get the global reminder defaults for calendar 
+        """
+        calendar_resource = self.api.calendarList().get(calendarId=self.calendar_id).execute()
+        return calendar_resource['defaultReminders'][0]  # REVIEW: Retrieve reminder 'method' as well?
 
     def get_upcoming_events(self, starting_time: str, number_of_events: int):
         """
         Prints the start and name of the next n events on the user's calendar.
         """
         if number_of_events <= 0:
-            raise ValueError("Number of events must be at least 1.")
+            raise ValueError("Number of events must be at least 1")
 
         events_response = self.api.events().list(calendarId=self.calendar_id, timeMin=starting_time,
                                                  maxResults=number_of_events, singleEvents=True,
                                                  orderBy='startTime').execute()
+
+        self.event_reminder_defaults = events_response['defaultReminders'][
+            0]  # REVIEW: Retrieve reminder 'method' as well?
         return events_response.get('items', [])
 
     def _get_events_from_year(self, years):
@@ -84,6 +100,8 @@ class Calendar:
                                                  orderBy='startTime', timeMin=time_min,
                                                  timeMax=time_max).execute()
 
+        self.event_reminder_defaults = events_response['defaultReminders'][
+            0]  # REVIEW: Retrieve reminder 'method' as well?
         return events_response.get('items', [])
 
     def get_past_events(self, years_past: int = DEFAULT_PAST_YEAR_RANGE):
@@ -101,53 +119,72 @@ class Calendar:
          Get events within specified year limit in the future
         """
         if years_future < 0:
-            raise ValueError()
+            raise ValueError("Year Input cannot be negative")
         return self._get_events_from_year(years_future)
+
+    def get_event_reminder(self, event):
+        if event['reminders']['useDefault']:
+            event['reminders'] = [self.reminder_defaults]
+        else:
+            try:
+                event['reminders']['overrides']
+            except KeyError:
+                event['reminders'] = []
+            else:
+                event['reminders'] = event['reminders']['overrides']
+        return event
 
     def navigate_to_events(self, time):
         events = self.get_past_events()
         events += self.get_future_events()
         resultList = []
         for event in events:
-            eventTime = event['start']['dateTime'].split('T', 1)
+            try:
+                eventTime = event['start']['dateTime'].split('T', 1)
+            except KeyError:
+                eventTime = [event['start']['date']]
             if time in eventTime[0]:
                 result = 'Event:' + event['summary'] + ' at ' + event['start'].get('dateTime',
                                                                                    event['start'].get('date'))
                 if event['reminders']['useDefault']:
-                    result += 'Reminder in 10 minutes before event'
+                    result += '\nReminder in 10 minutes before event'
                 else:
                     for reminder in event['reminders']['overrides']:
-                        result + 'Reminder in ' + str(reminder['minutes']) + ' minutes before event as ' + reminder[
+                        result += '\nReminder in ' + str(reminder['minutes']) + ' minutes before event as ' + reminder[
                             'method']
                 resultList.append(result)
         if len(resultList) < 1:
-            resultList = "Nothing showed up in your search"
+            resultList = "Nothing showed up at this time: " + time
         return resultList
-        pass
 
     def search_events(self, keyword: str):
         """"
         Allows the user to search for events
         """
+
         events = self.get_past_events()
         events += self.get_future_events()
         resultList = []
         for event in events:
             if keyword.lower() in event['summary'].lower():
-                result = 'Event:' + event['summary'] + ' at ' + event['start'].get('dateTime', event['start'].get('date'))
+                result = 'Event:' + event['summary'] + ' at ' + event['start'].get('dateTime',
+                                                                                   event['start'].get('date'))
+
                 if event['reminders']['useDefault']:
-                    result += 'Reminder in 10 minutes before event'
+                    result += '\nReminder in 10 minutes before event'
                 else:
                     for reminder in event['reminders']['overrides']:
-                        result + 'Reminder in ' + str(reminder['minutes']) + ' minutes before event as ' + reminder['method']
+                        result += '\nReminder in ' + str(reminder['minutes']) + ' minutes before event as ' + reminder[
+                            'method']
                 resultList.append(result)
         if len(resultList) < 1:
             resultList.append("Nothing showed up in your search")
         return resultList
 
     def delete_events(self, event):
-        eventId = event['id']
-        self.api.events().delete(calendarId=self.calendar_id, eventId=eventId).execute()
+        event_id = event['id']
+        self.api.events().delete(calendarId=self.calendar_id, eventId=event_id).execute()
+        print('Event ', event['summary'], ' Successfully Deleted')
 
 
 def get_date_iso(date_str: str):
@@ -157,38 +194,108 @@ def get_date_iso(date_str: str):
     return date_str.isoformat() + 'Z'
 
 
+"""
+The following is runner code unrelated to the functionality and is only to be used
+demo the functionality. Therefore, this code is not used in coverage testing
+"""
+
+
+def get_choice():      #
+    print('Please enter your choice')
+    print('1. View past events.')
+    print('2. View future events')
+    print('3. Navigate to an event with the date')
+    print('4. Search for an event and reminders')
+    print('5. Delete an event and reminders')
+    print('6. Exit')
+
+    choice = int(input('Your choice as an integer: '))
+
+    return choice
+
+
+def print_events(events, calendar):
+    result_list = []
+    for event in events:
+        result = 'Event:' + event['summary'] + ' at ' + event['start'].get('dateTime',
+                                                                           event['start'].get('date'))
+        event = calendar.get_event_reminder(event)
+        for reminder in event['reminders']:
+            result += '\nReminder in ' + str(reminder['minutes']) + ' minutes before event as ' + reminder[
+                'method']
+        result_list.append(result)
+    print_results(result_list)
+
+
+def print_results(result_list):
+    i = 1
+    for printResult in result_list:
+        print(i, printResult)
+        i += 1
+
+
+def get_event_to_delete(calendar):
+    print('Select event to be deleted')
+    events = calendar.get_past_events()
+    events += calendar.get_future_events()
+    print_events(events, calendar)
+    try:
+        events_index = int(input('Enter the number of the event that you wish to delete: ')) - 1
+        return events[events_index]
+    except IndexError:
+        print("Index out of bounds")
+        get_event_to_delete(calendar)
+
+
 def main():
     primary_calendar = Calendar(get_calendar_api())
 
-    # print('Please enter your choice')
-    # print('1. View past events.')
-    # print('2. View future events')
-    # print('3. Feature 3')
-    # print('4. Search for an event and reminders')
-    # print('5. Delete an event and reminders')
-    # print('6. Exit')
+    # time_now = datetime.datetime.utcnow().isoformat() + 'Z'  # 'Z' indicates UTC time
+    # primary_calendar.get_upcoming_events(time_now, 3)
 
-    time_now = datetime.datetime.utcnow().isoformat() + 'Z'  # 'Z' indicates UTC time
 
-    # choice = input('Your choice as an integer: ')
+    choice = get_choice()
 
-    events = primary_calendar.get_upcoming_events(time_now, 10)
-    # events = primary_calendar.get_past_events()
-    # events = primary_calendar.get_future_events()
-    x = input("Enter date for search: ")
+    while choice != 6:
+        if choice == 1:
+            print("Enter number of years that you would like to view. (Enter any letter or character to view default years(5))")
+            years = input('')
+            try:
+                years = int(years)
+                events = primary_calendar.get_past_events(years)
+            except ValueError:
+                events = primary_calendar.get_past_events()
+            print_events(events, primary_calendar)
+        elif choice == 2:
+            print("Enter number of years that you would like to view. (Enter any letter or character to view default years(2))")
+            years = input('')
+            try:
+                years = int(years)
+                events = primary_calendar.get_future_events(years)
+            except ValueError:
+                events = primary_calendar.get_future_events()
+            print_events(events, primary_calendar)
+        elif choice == 3:
+            date = input("Enter date for search: ")
+            results = primary_calendar.navigate_to_events(date)
+            print_results(results)
+        elif choice == 4:
+            keyword = input("Enter keyword for search: ")
+            results = primary_calendar.search_events(keyword)
+            print_results(results)
+        elif choice == 5:
+            delete_event = get_event_to_delete(primary_calendar)
+            primary_calendar.delete_events(delete_event)
+        else:
+            print('Invalid input')
 
-    while len(x) < 2:
-        print("Keyword should be at least 2 characters long")
-        x = input("Enter Keyword: ")
-    print(primary_calendar.navigate_to_events(x))
-    if not events:
-        print('No upcoming events found.')
+        do_over = input("If you would like to keep using the program please type Y")
+        if do_over.lower() == 'y':
+            choice = get_choice()
+        else:
+            choice = 6
+    print('Thank you for using our program!!')
 
-    i = 0
-    for event in events:
-        i += 1
-        start = event['start'].get('dateTime', event['start'].get('date'))
-        print(i, start, event['summary'])
 
 
 if __name__ == "__main__":  # Prevents the main() function from being called by the test suite runner
@@ -201,4 +308,3 @@ if __name__ == "__main__":  # Prevents the main() function from being called by 
 #          Do not support other emails
 #   Search events and reminders using different keywords
 #   Delete events and reminders
-

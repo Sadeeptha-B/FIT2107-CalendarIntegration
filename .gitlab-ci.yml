@@ -18,4 +18,5 @@ coverage:
   script:
   - coverage run -m CalendarTest
   - coverage report
+  - coverage html
   coverage: '/^TOTAL.*\s+(\d+\%)$/'
