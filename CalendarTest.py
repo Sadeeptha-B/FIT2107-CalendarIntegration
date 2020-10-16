@@ -9,7 +9,7 @@ class CalendarTestGetEvents(unittest.TestCase):
     """
 
     def setUp(self) -> None:
-        self.mock_api = Mock()
+        self.mock_api = MagicMock()
         self.Calendar = Calendar(self.mock_api)
 
     def test_get_upcoming_events_number(self):
@@ -158,12 +158,15 @@ class CalendarTestSearchEvents(unittest.TestCase):
 
 def main():
     # Create the test suite from the cases above.
-    navigateSuite = unittest.TestLoader().loadTestsFromTestCase(CalendarTestNavigateEvents)
-    searchSuite = unittest.TestLoader().loadTestsFromTestCase(CalendarTestSearchEvents)
+    get_event_suite = unittest.TestLoader().loadTestsFromTestCase(CalendarTestGetEvents)
+    navigate_suite = unittest.TestLoader().loadTestsFromTestCase(CalendarTestNavigateEvents)
+    search_suite = unittest.TestLoader().loadTestsFromTestCase(CalendarTestSearchEvents)
 
     # This will run the test suite.
-    unittest.TextTestRunner(verbosity=2).run(navigateSuite)
-    unittest.TextTestRunner(verbosity=2).run(searchSuite)
+
+    unittest.TextTestRunner(verbosity=2).run(get_event_suite)
+    unittest.TextTestRunner(verbosity=2).run(navigate_suite)
+    unittest.TextTestRunner(verbosity=2).run(search_suite)
 
 
 main()
