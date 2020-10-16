@@ -63,10 +63,12 @@ class CalendarTestGetEvents(unittest.TestCase):
         self.assertEqual(self.Calendar.get_past_events.__defaults__[0], default_past_year_limit)
 
     def test_events_future(self):
-        events = self.Calendar.get_future_events()
+        self.mock_api.events().list().execute()["items"] = MagicMock(side_effect=KeyError())
 
-        # Check if non empty number of events is returned.
-        self.assertNotEqual(events.items, [])
+        try:
+            self.Calendar.get_future_events()
+        except KeyError:
+            self.fail("Test failed: KeyError raised for no event instance.")
 
 
 class CalendarTestNavigateEvents(unittest.TestCase):
@@ -169,4 +171,5 @@ def main():
     unittest.TextTestRunner(verbosity=2).run(search_suite)
 
 
-main()
+if __name__ == "__main__":
+    main()
