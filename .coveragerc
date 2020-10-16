@@ -7,8 +7,10 @@ exclude_lines =
       # Enable default exclusion
       pragma: no cover
 
-      # Ignore exception coverage
-      raise ValueError
+      # Ignore runner code
+       if __name__ == .__main__.:
+
+ignore_errors = True
 
 
 

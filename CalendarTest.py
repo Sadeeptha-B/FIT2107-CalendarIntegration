@@ -1,3 +1,4 @@
+import datetime
 import unittest
 from unittest.mock import Mock, MagicMock, patch
 from Calendar import Calendar
@@ -11,9 +12,6 @@ class CalendarTestGetEvents(unittest.TestCase):
     def setUp(self) -> None:
         self.mock_api = MagicMock()
         self.Calendar = Calendar(self.mock_api)
-
-    def test_get_reminders(self):
-        # Removed temporarily
 
     def test_get_upcoming_events_number(self):
         """
@@ -80,29 +78,36 @@ class CalendarTestNavigateEvents(unittest.TestCase):
         self.mock_api = MagicMock()
         self.Calendar = Calendar(self.mock_api)
 
-    @patch('Calendar.Calendar')
-    def test_navigate_events_with_reminders(self, mock_cal):
-        mock_cal.get_past_events = MagicMock(return_value=[{'id': '1olba0rgbijmfv72m1126kpftf',
-                                             'summary': 'Past Event Summary',
-                                             'start': {'date': '2020-10-13'},
-                                             'reminders': {'useDefault': True}},
-                                            {'id': '2insr0pnrijmfv72m1126kpftf',
-                                             'summary': 'Past Event 2 Summary',
-                                             'start': {'date': '2020-11-13'},
-                                             'reminders': {'useDefault': True}}])
+    def my_side_effect(self, *args):
+        time_now = datetime.datetime.utcnow().isoformat() + 'Z'
+        time_past = '2015-10-16T04:04:56.174466Z'
+        time_future = '2022-10-16T04:04:56.174466Z'
+        past_param = "calendarId=self.calendar_id, singleEvents=True, orderBy='startTime', timeMin=" + time_past + ",timeMax=" + time_now
+        future_param = "calendarId=self.calendar_id, singleEvents=True, orderBy='startTime', timeMin=" + time_now + ",timeMax=" + time_future
+
+        if args[0] == past_param:
+            past_response = {'defaultReminders': [{'method': 'popup', 'minutes': 10}],
+                             'items': [{'id': '1olba0rgbijmfv72m1126kpftf',
+                                        'summary': 'Past Event Summary',
+                                        'start': {'date': '2020-10-13'},
+                                        'reminders': {'useDefault': True}}]}
+            return past_response
+        elif args[0] == future_param:
+            future_response = {'defaultReminders': [{'method': 'popup', 'minutes': 10}],
+                             'items': [ {'id': '2insr0pnrijmfv72m1126kpftf',
+                                         'summary': 'Past Event 2 Summary',
+                                         'start': {'date': '2020-11-13'},
+                                         'reminders': {'useDefault': True}}]}
+            return future_response
 
 
-        mock_cal.get_future_events = MagicMock(return_value=[{'id': '4odta0egtjvboj82p4326esnvw',
-                                           'summary': 'Future Event Summary',
-                                           'start': {'dateTime': '2020-10-22T18:30:00+05:30'},
-                                           'reminders': {'useDefault': False, 'overrides': [
-                                               {'method': 'email', 'minutes': 20},
-                                               {'method': 'popup', 'minutes': 10}]}}])
+    def test_navigate_events_with_reminders(self):
+        self.mock_api.events().list.return_value = MagicMock(side_effect=self.my_side_effect)
+        self.mock_api.events().list.return_value.execute.return_value = MagicMock(return_value=self.mock_api.events().list.return_value)
 
-
-        print(mock_cal.get_past_events.return_value)
-        print(mock_cal.get_future_events.return_value)
-        search_result = mock_cal.navigate_to_events('2020-10').return_value
+        print(self.Calendar.get_past_events())
+        print(self.Calendar.get_future_events())
+        search_result = self.Calendar.navigate_to_events('2020-10')
 
         print(search_result)
         self.assertEqual(

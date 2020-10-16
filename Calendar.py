@@ -81,11 +81,10 @@ class Calendar:
                                                  maxResults=number_of_events, singleEvents=True,
                                                  orderBy='startTime').execute()
 
-        print(events_response)
         self.event_reminder_defaults = events_response['defaultReminders'][0]
         return events_response.get('items', [])
 
-    def _get_events_from_year(self, api, years):
+    def _get_events_from_year(self, years):
         """
         Get events within specified year limit
             positive for years to the future, negative for years in the past
@@ -100,6 +99,8 @@ class Calendar:
                                                  orderBy='startTime', timeMin=time_min,
                                                  timeMax=time_max).execute()
 
+        print(events_response)
+
         self.event_reminder_defaults = events_response['defaultReminders'][0]
         return events_response.get('items', [])
 
@@ -111,15 +112,15 @@ class Calendar:
             raise ValueError("Year Input cannot be negative")
 
         year_input = - years_past
-        return self._get_events_from_year( year_input)
+        return self._get_events_from_year(year_input)
 
-    def get_future_events(self,years_future: int = DEFAULT_FUTURE_YEAR_RANGE):
+    def get_future_events(self, years_future: int = DEFAULT_FUTURE_YEAR_RANGE):
         """
          Get events within specified year limit in the future
         """
         if years_future < 0:
             raise ValueError("Year Input cannot be negative")
-        return self._get_events_from_year( years_future)
+        return self._get_events_from_year(years_future)
 
     def get_events_with_reminders(self, events):
         """
@@ -151,8 +152,7 @@ class Calendar:
             except KeyError:
                 event_time = [event['start']['date']]
             if time in event_time[0]:
-                result = 'Event:' + event['summary'] + ' at ' + event['start'].get('dateTime',
-                                                                                   event['start'].get('date'))
+                result = 'Event:' + event['summary'] + ' at ' + event['start'].get('dateTime',event['start'].get('date'))
                 event = self.get_event_reminder(event)
                 for reminder in event['reminders']:
                     result += '\nReminder in ' + str(reminder['minutes']) + ' minutes before event as ' + reminder[
@@ -190,7 +190,14 @@ class Calendar:
         self.api.events().delete(calendarId=self.calendar_id, eventId=event_id).execute()
 
 
-def get_choice():
+""" The following code is relevant to the presentation of the UI, required to compleete the user stories
+Therefore, this code is not tested and coverage testing is not applied, below
+==================================================================
+
+"""
+
+
+def get_choice():        # pragma: no cover
     print('Please enter your choice')
     print('1. View past events.')
     print('2. View future events')
@@ -203,14 +210,15 @@ def get_choice():
 
     return choice
 
-def get_date_iso(date_str: str):
+
+def get_date_iso(date_str: str):   # pragma: no cover
     """
     :param: date_str should be in utc format
     """
     return date_str.isoformat() + 'Z'
 
 
-def print_events(events, calendar):
+def print_events(events, calendar):           # pragma: no cover
     result_list = []
     for event in events:
         result = 'Event:' + event['summary'] + ' at ' + event['start'].get('dateTime',
@@ -223,14 +231,14 @@ def print_events(events, calendar):
     print_results(result_list)
 
 
-def print_results(result_list):
+def print_results(result_list):                   # pragma: no cover
     i = 1
     for printResult in result_list:
         print(i, printResult)
         i += 1
 
 
-def get_event_to_delete(calendar):
+def get_event_to_delete(calendar):                     # pragma: no cover
     print('Select event to be deleted')
     events = calendar.get_past_events()
     events += calendar.get_future_events()
@@ -243,7 +251,7 @@ def get_event_to_delete(calendar):
         get_event_to_delete(calendar)
 
 
-def main():
+def main():                                             # pragma: no cover
     primary_calendar = Calendar(get_calendar_api())
 
     # time_now = datetime.datetime.utcnow().isoformat() + 'Z'  # 'Z' indicates UTC time
@@ -257,7 +265,7 @@ def main():
             print("Enter number of years that you would like to view. (Enter any letter or character to view default years(5))")
             years = input('')
             try:
-                int(years)
+                years = int(years)
                 events = primary_calendar.get_past_events(years)
             except ValueError:
                 events = primary_calendar.get_past_events()
@@ -266,7 +274,7 @@ def main():
             print("Enter number of years that you would like to view. (Enter any letter or character to view default years(2))")
             years = input('')
             try:
-                int(years)
+                years = int(years)
                 events = primary_calendar.get_past_events(years)
             except ValueError:
                 events = primary_calendar.get_past_events()
@@ -291,6 +299,7 @@ def main():
         else:
             choice = 6
     print('Thank you for using our program!!')
+
 
 if __name__ == "__main__":  # Prevents the main() function from being called by the test suite runner
     main()
