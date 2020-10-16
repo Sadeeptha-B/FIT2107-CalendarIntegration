@@ -99,8 +99,6 @@ class Calendar:
                                                  orderBy='startTime', timeMin=time_min,
                                                  timeMax=time_max).execute()
 
-        print(events_response)
-
         self.event_reminder_defaults = events_response['defaultReminders'][0]
         return events_response.get('items', [])
 
@@ -143,8 +141,7 @@ class Calendar:
         return event
 
     def navigate_to_events(self, time):
-        events = self.get_past_events()
-        events += self.get_future_events()
+        events = [self.get_past_events(), self.get_future_events()]
         result_list = []
         for event in events:
             try:
@@ -158,7 +155,6 @@ class Calendar:
                     result += '\nReminder in ' + str(reminder['minutes']) + ' minutes before event as ' + reminder[
                         'method']
                 result_list.append(result)
-        print('\n\n THE LENGTH', len(result_list))
         if len(result_list) < 1:
             result_list.append("Nothing showed up at this time: " + time)
         return result_list
@@ -167,9 +163,7 @@ class Calendar:
         """"
         Allows the user to search for events
         """
-
-        events = self.get_past_events()
-        events += self.get_future_events()
+        events = [self.get_past_events(), self.get_future_events()]
         result_list = []
         for event in events:
             if keyword.lower() in event['summary'].lower():
@@ -276,8 +270,9 @@ def main():                                             # pragma: no cover
             try:
                 years = int(years)
                 events = primary_calendar.get_past_events(years)
+
             except ValueError:
-                events = primary_calendar.get_past_events()
+                events = primary_calendar.get_future_events()
             print_events(events, primary_calendar)
         elif choice == 3:
             date = input("Enter date for search: ")

@@ -180,13 +180,13 @@ class CalendarTestDeleteEvents(unittest.TestCase):
         self.Calendar = Calendar(self.mock_api)
 
     def test_delete_api_call(self):
-
         event = {'id': '1olba0rgbijmfv72m1126kpftf', 'summary': 'Past Event Summary',
                  'start': {'dateTime': '2020-10-13T11:30:00+05:30'}, 'reminders': {'useDefault': True}}
 
+        self.mock_api.events().delete().execute = MagicMock()
         self.Calendar.delete_events(event)
-        delete_event = self.mock_api.events().delete().execute()
-        self.assertEqual(delete_event.get.call_count, 1)
+        self.mock_api.events().delete().execute.assert_called_once()
+
 
     @patch('Calendar.Calendar.get_past_events')
     @patch('Calendar.Calendar.get_future_events')
